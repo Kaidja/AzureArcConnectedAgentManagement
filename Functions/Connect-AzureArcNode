@@ -1,0 +1,106 @@
+Function Connect-AzureArcNode
+{
+<#
+.Synopsis
+   Connects the local machine to Azure Arc.
+.DESCRIPTION
+   Connects the local machine to Azure Arc.
+.PARAMETER AccessToken
+.PARAMETER ServicePrincipalSecret
+Azure AD Application ServicePrincipal Secret
+.PARAMETER ServicePrincipalID
+Azure AD Application ServicePrincipal ID
+.PARAMETER DeviceLogin
+Specifies the Azure Arc onboarding method
+.PARAMETER TenantID
+Specifies the Azure Active Directory Tenant ID
+.PARAMETER ResourceGroup
+Specifies the Azure Resource Group Name
+.PARAMETER SubscriptionID
+Specifies the Azure Subscription ID
+.PARAMETER Tags
+Specifies the Azure Resource Tags
+.EXAMPLE
+Connect-AzureArcNode -DeviceLogin -TenantID XXXX-XXXX-XXXX-XXXX-XXXXXX -ResourceGroup "Resource Group Name" -Location "West Europe" -SubscriptionID XXXX-XXXX-XXXX-XXXX-XXXXXX
+.EXAMPLE
+Connect-AzureArcNode -ServicePrincipalID XXXX-XXXX-XXXX-XXXX-XXXXXX -ServicePrincipalSecret "XXXX-XXXX-XXXX-XXXX-XXXXXX" -TenantID XXXX-XXXX-XXXX-XXXX-XXXXXX -ResourceGroup "Resource Group Name" -Location "West Europe" -SubscriptionID XXXX-XXXX-XXXX-XXXX-XXXXXX
+.EXAMPLE
+#Define Azure Resource Tags Hashtable
+$Tags = @{
+    Datacenter = "Value1"
+    City = "Value2"
+    StateOrDistrict = "Value3"
+    CountryOrRegion = "Value4"
+    MinuTag= "Value5"
+}
+
+Connect-AzureArcNode -ServicePrincipalID XXXX-XXXX-XXXX-XXXX-XXXXXX -ServicePrincipalSecret "XXXX-XXXX-XXXX-XXXX-XXXXXX" -TenantID XXXX-XXXX-XXXX-XXXX-XXXXXX -ResourceGroup "Resource Group Name" -Location "West Europe" -SubscriptionID XXXX-XXXX-XXXX-XXXX-XXXXXX -Tags $Tags
+
+#>
+    [CmdletBinding(DefaultParameterSetName = 'ServicePrincipal')]
+    Param(
+      [Parameter(Mandatory = $true,ParameterSetName = 'AccessToken',HelpMessage = 'Enter Access Token')]
+        $AccessToken,
+     [Parameter(Mandatory = $true,ParameterSetName = 'ServicePrincipal',HelpMessage = 'Enter ServicePrincipal')]
+        $ServicePrincipalSecret,
+     [Parameter(Mandatory = $true,ParameterSetName = 'ServicePrincipal',HelpMessage = 'Enter ServicePrincipal ID')]
+        $ServicePrincipalID,
+     [Parameter(Mandatory = $true,ParameterSetName = 'DeviceLogin')]
+        [Switch]$DeviceLogin,
+     [Parameter(Mandatory = $true,ParameterSetName = 'ServicePrincipal',HelpMessage = 'Enter')]
+     [Parameter(Mandatory = $true,ParameterSetName = 'DeviceLogin',HelpMessage = 'Enter')]
+        [String]$TenantID,
+     [Parameter(Mandatory = $true,ParameterSetName = 'AccessToken',HelpMessage = 'Enter')]
+     [Parameter(Mandatory = $true,ParameterSetName = 'ServicePrincipal',HelpMessage = 'Enter')]
+     [Parameter(Mandatory = $true,ParameterSetName = 'DeviceLogin',HelpMessage = 'Enter')]
+        [String]$ResourceGroup,
+     [Parameter(Mandatory = $true,ParameterSetName = 'AccessToken',HelpMessage = 'Enter')]
+     [Parameter(Mandatory = $true,ParameterSetName = 'ServicePrincipal',HelpMessage = 'Enter')]
+     [Parameter(Mandatory = $true,ParameterSetName = 'DeviceLogin',HelpMessage = 'Enter')]
+        [String]$Location,
+     [Parameter(Mandatory = $true,ParameterSetName = 'AccessToken',HelpMessage = 'Enter')]
+     [Parameter(Mandatory = $true,ParameterSetName = 'ServicePrincipal',HelpMessage = 'Enter')]
+     [Parameter(Mandatory = $true,ParameterSetName = 'DeviceLogin',HelpMessage = 'Enter')]
+        [String]$SubscriptionID,
+     [Parameter(Mandatory = $false,ParameterSetName = 'AccessToken',HelpMessage = 'Enter')]
+     [Parameter(Mandatory = $false,ParameterSetName = 'ServicePrincipal',HelpMessage = 'Enter')]
+     [Parameter(Mandatory = $false,ParameterSetName = 'DeviceLogin',HelpMessage = 'Enter')]
+        [HashTable]$Tags
+    )
+
+    Begin{
+        $AZCMAGENTLocation = "C:\Program Files\AzureConnectedMachineAgent\azcmagent.exe"
+        If(!(Test-Path -Path $AZCMAGENTLocation)){
+            Throw "Azure Arc Agent not installed"
+        }
+    }
+    Process{
+        
+        
+
+        If($PSBoundParameters.ContainsKey("ServicePrincipalID")){
+            $Parameters = '& $AZCMAGENTLocation connect --service-principal-id $ServicePrincipalID --service-principal-secret $ServicePrincipalSecret --tenant-id $TenantID --subscription-id $SubscriptionID --resource-group $ResourceGroup --location $Location'
+
+        }
+        ElseIf($PSBoundParameters.ContainsKey("AccessToken")){
+            $Parameters = '& $AZCMAGENTLocation connect --access-token $AccessToken --subscription-id $SubscriptionID --resource-group $ResourceGroup --location $Location'
+        }
+        ElseIf($PSBoundParameters.ContainsKey("DeviceLogin")){
+            $Parameters = '& $AZCMAGENTLocation connect --tenant-id $TenantID --subscription-id $SubscriptionID --resource-group $ResourceGroup --location $Location'
+        }
+
+        If($PSBoundParameters.ContainsKey("Tags")){
+            $ProcessedTags = ($Tags.GetEnumerator()| ForEach-Object -Process { "$($PSItem.key)" + "=" + "'$($PSItem.value)'" }) -join ","
+            $Parameters = "$Parameters --tags $ProcessedTags"
+        }
+        Try{
+            Write-Verbose -Message "& (Executing $AZCMAGENTLocation with the following parameters: $Parameters)"
+            Invoke-Expression $Parameters
+        }
+        Catch{
+            $Error[0]
+        }
+    
+    }
+    End{}
+}
