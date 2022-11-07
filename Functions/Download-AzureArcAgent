@@ -1,0 +1,6 @@
+Function Download-AzureArcAgent
+{
+    $ArcAgentURL = "https://aka.ms/AzureConnectedMachineAgent"
+    $MSILocation = "C:\Windows\Temp\AzureConnectedMachineAgent.msi"
+    Invoke-WebRequest -Uri $ArcAgentURL -OutFile $MSILocation
+}
