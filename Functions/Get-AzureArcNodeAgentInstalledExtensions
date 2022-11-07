@@ -1,0 +1,41 @@
+Function Get-AzureArcNodeAgentInstalledExtensions
+{
+<#
+.Synopsis
+   Prints out local Azure Arc Agent installed exentsions
+.DESCRIPTION
+   Prints out local Azure Arc Agent installed exentsions
+.EXAMPLE
+   Get-AzureArcNodeAgentInstalledExtensions
+#>    
+   Begin{
+
+        $AZCMAGENTLocation = "C:\Program Files\AzureConnectedMachineAgent\azcmagent.exe"
+        If(!(Test-Path -Path $AZCMAGENTLocation)){
+            Throw "Azure Arc Agent not installed"
+        }    
+    }
+    Process{
+        Try{
+            If(Test-Path -Path "C:\ProgramData\GuestConfig\extension_logs"){
+                $Extensions = Get-ChildItem -Path "C:\ProgramData\GuestConfig\extension_logs"
+                foreach($Extension in $Extensions){
+                
+                    If(Test-Path "$($Extension.FullName)\state.json"){
+                        $ExtensionData = Get-Content -Raw -Path "$($Extension.FullName)\state.json" -ErrorAction Stop | ConvertFrom-Json
+                        $ExtensionData
+                    }
+
+                }
+            }
+            Else{
+                Write-Output -InputObject "No extensions installed yet."
+            }
+
+        }
+        Catch{
+            $Error[0]
+        }
+    }
+    End{}
+}
