@@ -1,0 +1,23 @@
+Function Get-MSIVersion 
+{
+<#
+    Source - https://raw.githubusercontent.com/Azure/ArcEnabledServersGroupPolicy/main/EnableAzureArc.ps1
+#>
+    Param(
+        [IO.FileInfo]$Path
+    )
+    
+    $WindowsInstaller = New-Object -ComObject WindowsInstaller.Installer
+    $Database = $windowsInstaller.GetType().InvokeMember("OpenDatabase", "InvokeMethod", $Null,$windowsInstaller, @($path.FullName, 0))
+    
+    $Query = "SELECT Value FROM Property WHERE Property = 'ProductVersion'"
+    $View = $Database.GetType().InvokeMember(
+        "OpenView", "InvokeMethod", $Null, $database, ($Query)
+    )
+    
+    $View.GetType().InvokeMember("Execute", "InvokeMethod", $Null, $View, $Null)
+    $Record = $View.GetType().InvokeMember( "Fetch", "InvokeMethod", $Null, $View, $Null )
+    $Version = ($Record.GetType().InvokeMember( "StringData", "GetProperty", $Null, $record, 1 ))
+    
+    return $Version
+}
