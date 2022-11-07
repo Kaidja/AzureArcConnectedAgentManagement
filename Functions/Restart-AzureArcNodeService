@@ -1,0 +1,24 @@
+Function Restart-AzureArcNodeService
+{
+<#
+.Synopsis
+   Restarts local Azure Arc Agent Service.
+.DESCRIPTION
+   Restarts local Azure Arc Agent Service.
+.EXAMPLE
+    Restart-AzureArcNodeService
+#>    
+    Begin{}
+    Process{
+        
+        Try{
+            Restart-Service -Name himds -ErrorAction Stop -Force -Verbose
+        }
+        Catch{
+            Write-Output -InputObject "Failed to restart Azure Hybrid Instance Metadata Service"
+        }
+
+    }
+    End{}
+    
+}
