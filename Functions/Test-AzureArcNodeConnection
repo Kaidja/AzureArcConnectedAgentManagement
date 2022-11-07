@@ -1,0 +1,36 @@
+Function Test-AzureArcNodeConnection
+{
+<#
+.Synopsis
+   Gathers local Azure Arc Agent Service status.
+.DESCRIPTION
+   Gathers local Azure Arc Agent Service status.
+.EXAMPLE
+    Test-AzureArcNodeConnection
+#>
+    Begin{
+
+        $AZCMAGENTLocation = "C:\Program Files\AzureConnectedMachineAgent\azcmagent.exe"
+        If(!(Test-Path -Path $AZCMAGENTLocation)){
+            Throw "Azure Arc Agent not installed"
+        }    
+    }
+    Process{
+        Try{
+            $URL = "http://localhost:40342/agentstatus"
+            $ServiceStatus = (Invoke-WebRequest -Uri $URL -UseBasicParsing -ErrorAction STOP).Content | ConvertFrom-Json
+            
+            $ServicestatusHash = [ordered]@{}
+            $ServiceStatus.psobject.properties | Sort-Object -Property Name | 
+                ForEach-Object { $ServicestatusHash[$((Get-Culture).TextInfo.ToTitleCase($PSItem.Name))] = $PSItem.Value }
+            
+            Return $ServicestatusHash
+        }
+        Catch{
+            $Error[0]
+        }
+    }
+    End{}
+    
+
+}
