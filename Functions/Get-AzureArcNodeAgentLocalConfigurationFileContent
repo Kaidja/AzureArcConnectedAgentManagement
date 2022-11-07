@@ -1,0 +1,33 @@
+Function Get-AzureArcNodeAgentLocalConfigurationFileContent
+{
+<#
+.Synopsis
+   Prints out local Azure Arc Agent Service "C:\ProgramData\AzureConnectedMachineAgent\Config\localconfig.json" file content.
+.DESCRIPTION
+   Prints out local Azure Arc Agent Service "C:\ProgramData\AzureConnectedMachineAgent\Config\localconfig.json" file content.
+.EXAMPLE
+    Get-AzureArcNodeAgentLocalConfigurationFileContent
+#>   
+   Begin{
+
+        $AZCMAGENTLocation = "C:\Program Files\AzureConnectedMachineAgent\azcmagent.exe"
+        If(!(Test-Path -Path $AZCMAGENTLocation)){
+            Throw "Azure Arc Agent not installed"
+        }    
+    }
+    Process{
+        Try{
+            $ConfigurationFileContent = Get-Content -Raw -Path "C:\ProgramData\AzureConnectedMachineAgent\Config\localconfig.json" -ErrorAction Stop | ConvertFrom-Json
+
+            $ConfigurationFileHash = [ordered]@{}
+            $ConfigurationFileContent.psobject.properties | Sort-Object -Property Name | 
+            ForEach-Object { $ConfigurationFileHash[$((Get-Culture).TextInfo.ToTitleCase($PSItem.Name))] = $PSItem.Value }
+            
+            Return $ConfigurationFileHash
+        }
+        Catch{
+            $Error[0]
+        }
+    }
+    End{}
+}
