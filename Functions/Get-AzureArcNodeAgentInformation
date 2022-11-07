@@ -1,0 +1,59 @@
+Function Get-AzureArcNodeAgentInformation
+{
+<#
+.Synopsis
+   Outputs information about the Azure Arc Agent.
+.DESCRIPTION
+   Outputs information about the Azure Arc Agent.
+.PARAMETER OutPutType
+Specifies the output type. Type can be JSON or RAW.
+.EXAMPLE
+Get-AzureArcNodeAgentInformation -OutPutType JSON
+.EXAMPLE   
+Get-AzureArcNodeAgentInformation -OutPutType RAW
+#>
+    [CmdletBinding()]
+    Param(
+      [Parameter(Mandatory = $True,HelpMessage = 'Enter the output type')]
+      [ValidateSet("JSON", "RAW")]
+        $OutPutType = "JSON"
+    
+    )
+
+    Begin{
+        $AZCMAGENTLocation = "C:\Program Files\AzureConnectedMachineAgent\azcmagent.exe"
+        If(!(Test-Path -Path $AZCMAGENTLocation)){
+            Throw "Azure Arc Agent not installed"
+        }
+    }
+    Process{
+       If($OutPutType -eq "JSON"){
+            $Parameters = '& $AZCMAGENTLocation show -j'
+
+            $AgentstatusHash = [ordered]@{}
+            $QueryResults = Invoke-Expression $Parameters | ConvertFrom-Json
+            $QueryResults.psobject.properties | Sort-Object -Property Name | 
+                ForEach-Object { $AgentstatusHash[$((Get-Culture).TextInfo.ToTitleCase($PSItem.Name))] = $PSItem.Value }
+            
+            Return $AgentstatusHash
+
+       }
+       Else{
+            $Parameters = '& $AZCMAGENTLocation show'
+            $QueryResults = Invoke-Expression $Parameters
+
+            Return $QueryResults
+       }
+       
+        Try{
+            Write-Verbose -Message "Executing $AZCMAGENTLocation with the following parameters: $Parameters"
+
+
+        }
+        Catch{
+            $Error[0]
+        }
+    
+    }
+    End{}
+}
