@@ -1,0 +1,24 @@
+Function Get-AzureArcNodeServiceStatus
+{
+<#
+.Synopsis
+   Prints out local Azure Arc Agent Service Status.
+.DESCRIPTION
+   Prints out local Azure Arc Agent Service Status.
+.EXAMPLE
+    Get-AzureArcNodeServiceStatus
+#>    
+    Begin{}
+    Process{
+        
+        Try{
+            Get-Service -Name himds -ErrorAction Stop
+        }
+        Catch{
+            Write-Output -InputObject "Azure Hybrid Instance Metadata Service is not installed"
+        }
+
+    }
+    End{}
+    
+}
