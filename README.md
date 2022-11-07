@@ -19,5 +19,10 @@ PowerShell module for Azure Arc Connected Agent. This module is built over the A
 * Test-AzureArcNodeConnection<br>
 * Test-AzureArcNodeNetworkConnectivity<br>
 
+### How to install AzureArcConnectedAgentManagement Module
+* Open PowerShell as an administrator and run the following command:
+  * <b>Install-Module -Name AzureArcConnectedAgentManagement</b><br>
+* After the installation, print out all the commands using the following command
+  * <b>Get-Command -Module AzureArcConnectedAgentManagement</b>
 
 Read more from - https://www.kaidojarvemets.com/getting-started-with-azurearcconnectedagentmanagement-powershell-module/
