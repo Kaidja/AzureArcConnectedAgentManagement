@@ -1,0 +1,42 @@
+Function Install-AzureArcAgent
+{
+<#
+.Synopsis
+   Installs Azure Arc Agent
+.DESCRIPTION
+   Installs Azure Arc Agent
+.EXAMPLE
+    Install-AzureArcAgent
+#>
+    Begin{
+
+        $MSILocation = "C:\Windows\Temp\AzureConnectedMachineAgent.msi"
+        Download-AzureArcAgent
+        $DownloadedVersion = Get-MSIVersion -Path $MSILocation
+
+        $AZCMAGENTLocation = "C:\Program Files\AzureConnectedMachineAgent\azcmagent.exe"
+        If(!(Test-Path -Path $AZCMAGENTLocation)){
+            [Version]$InstalledVersion = 0.0.0.0
+        }
+        Else{
+            [Version]$InstalledVersion = (Get-AzureArcNodeAgentInformation -OutPutType JSON).Agentversion
+        }
+        
+    }
+    Process{
+        If([Version]$InstalledVersion -lt [Version]$DownloadedVersion[1]){
+            $ARCAgentInstallation = (Start-Process -FilePath msiexec -ArgumentList "/i $MSILocation /qn" -Wait -PassThru).ExitCode
+            If($ARCAgentInstallation -eq 0){
+                Write-Output -InputObject "Installation succeeded. Exit Code: $ARCAgentInstallation"
+            }
+            Else{
+                Write-Output -InputObject "Installation failed. Exit Code: $ARCAgentInstallation"
+            }
+        }
+        Else{
+            "All good. No need to update the agent. Current agent version: $InstalledVersion"
+        }
+    }
+    End{}
+
+}
