@@ -1,0 +1,28 @@
+Function Save-AzureArcNodeLogs
+{
+<#
+.Synopsis
+   Gathers Azure Arc Agent logs from the local machine for troubleshooting. The logs will be saved on the desktop of the current user
+.DESCRIPTION
+   Gathers Azure Arc Agent logs from the local machine for troubleshooting. The logs will be saved on the desktop of the current user
+.EXAMPLE
+    Save-AzureArcNodeLogs
+#>
+
+    Begin{
+        $AZCMAGENTLocation = "C:\Program Files\AzureConnectedMachineAgent\azcmagent.exe"
+        If(!(Test-Path -Path $AZCMAGENTLocation)){
+            Throw "Azure Arc Agent not installed"
+        }
+    }
+
+    Process{
+        $Parameters = '& $AZCMAGENTLocation logs -o $env:USERPROFILE\Desktop\AzureConnectedMachineAgentLogs.zip'
+
+        $Logs = Invoke-Expression $Parameters
+    
+        Return $Logs
+    }
+
+    End{}
+}
