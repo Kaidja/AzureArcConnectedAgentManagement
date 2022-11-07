@@ -1,0 +1,62 @@
+Function Disconnect-AzureArcNode
+{
+<#
+.Synopsis
+   Disconnects the local machine from Azure Arc service.
+.DESCRIPTION
+   Disconnects the local machine from Azure Arc service.
+.PARAMETER AccessToken
+.PARAMETER ServicePrincipalSecret
+.PARAMETER ServicePrincipalID
+.PARAMETER DeviceLogin
+.EXAMPLE
+Disconnect-AzureArcNode -ServicePrincipalSecret XXXX-XXXX-XXXX-XXXX-XXXXXX -ServicePrincipalID XXXX-XXXX-XXXX-XXXX-XXXXXX
+.EXAMPLE   
+Disconnect-AzureArcNode -AccessToken $MyAccessToken
+.EXAMPLE  
+Disconnect-AzureArcNode -DeviceLogin
+#>
+    [CmdletBinding(DefaultParameterSetName = 'ServicePrincipal')]
+    Param(
+      [Parameter(Mandatory = $true,ParameterSetName = 'AccessToken',HelpMessage = 'Enter Access Token')]
+        $AccessToken,
+     [Parameter(Mandatory = $true,ParameterSetName = 'ServicePrincipal',HelpMessage = 'Enter ServicePrincipal')]
+        $ServicePrincipalSecret,
+     [Parameter(Mandatory = $true,ParameterSetName = 'ServicePrincipal',HelpMessage = 'Enter ServicePrincipal ID')]
+        $ServicePrincipalID,
+     [Parameter(Mandatory = $true,ParameterSetName = 'DeviceLogin')]
+        [Switch]$DeviceLogin
+
+
+    )
+
+    Begin{
+        $AZCMAGENTLocation = "C:\Program Files\AzureConnectedMachineAgent\azcmagent.exe"
+        If(!(Test-Path -Path $AZCMAGENTLocation)){
+            Throw "Azure Arc Agent not installed"
+        }
+    }
+    Process{
+        
+        If($PSBoundParameters.ContainsKey("ServicePrincipalID")){
+            $Parameters = "& $AZCMAGENTLocation disconnect --service-principal-id $ServicePrincipalID --service-principal-secret $ServicePrincipalSecret"
+        }
+        ElseIf($PSBoundParameters.ContainsKey("AccessToken")){
+            $Parameters = "& $AZCMAGENTLocation disconnect --access-token $AccessToken"
+        }
+        ElseIf($PSBoundParameters.ContainsKey("DeviceLogin")){
+            $Parameters = "& $AZCMAGENTLocation disconnect "
+        }
+
+        Try{
+            Write-Verbose -Message "Executing $AZCMAGENTLocation with the following parameters: $Parameters"
+
+            Invoke-Expression $Parameters
+        }
+        Catch{
+            $Error[0]
+        }
+    
+    }
+    End{}
+}
