@@ -1,0 +1,50 @@
+Function Set-AzureArcNodeConfiguration
+{
+<#
+.Synopsis
+   Configures settings for the local Azure Arc Agent
+.DESCRIPTION
+   Configures settings for the local Azure Arc Agent
+.PARAMETER ConfigurationName
+    Specifies the setting name. Possible values are incomingconnections.ports,proxy.url,extensions.allowlist,extensions.blocklist,proxy.bypass,guestconfiguration.enabled,extensions.enabled
+.PARAMETER ConfigurationValue
+    Specifies the setting value.
+.PARAMETER OutPutType
+.EXAMPLE
+    Set-AzureArcNodeConfiguration -ConfigurationName proxy.url -ConfigurationValue "http://proxy.Kaido.ee:8530" -OutPutType JSON
+#>
+    [CmdletBinding()]
+    Param(
+      [Parameter(Mandatory = $True,HelpMessage = 'Enter the Configuration Name')]
+      [ValidateSet("incomingconnections.ports","proxy.url","extensions.allowlist","extensions.blocklist","proxy.bypass","guestconfiguration.enabled","extensions.enabled")]
+        $ConfigurationName,
+      [Parameter(Mandatory = $True,HelpMessage = 'Enter the Configuration Value')]
+        $ConfigurationValue,
+      [Parameter(Mandatory = $True,HelpMessage = 'Enter the output type')]
+      [ValidateSet("JSON", "RAW")]
+        $OutPutType = "JSON"     
+    )
+
+    Begin{
+        $AZCMAGENTLocation = "C:\Program Files\AzureConnectedMachineAgent\azcmagent.exe"
+        If(!(Test-Path -Path $AZCMAGENTLocation)){
+            Throw "Azure Arc Agent not installed"
+        }
+    }
+
+    Process{
+        If($OutPutType -eq "JSON"){
+            $Parameters = '& $AZCMAGENTLocation config set $ConfigurationName $ConfigurationValue -j'
+        }
+        Else{
+            $Parameters = '& $AZCMAGENTLocation config set $ConfigurationName $ConfigurationValue'
+        }
+        
+        $SetConfigResults = Invoke-Expression $Parameters
+    
+        Return $SetConfigResults
+    }
+
+    End{}
+
+}
